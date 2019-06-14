@@ -16,7 +16,7 @@ function getRoute(start, end, outboundDate, callback, inboundDate) {
     var endpoint = "https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browseroutes/v1.0/US/USD/en-US/" + start + "/" + end + "/" + outboundDate;
 
     if(inboundDate)
-        endpoint += "inboundpartialdate=" + inboundDate;
+        endpoint += "?inboundpartialdate=" + inboundDate;
 
     $.get({
         url : endpoint,
