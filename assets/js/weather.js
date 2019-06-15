@@ -7,7 +7,6 @@ function getForecast(city, callback) {
     $.get({
         url: queryURL
     }).done(function (data) {
-        console.log(data);
 
         var offset = data.timezone;
 
@@ -26,15 +25,14 @@ function getForecast(city, callback) {
 
             var timeToFindIndex = 0;
 
-            // Filter data for nearest hour to noon.
-            filteredForData = data.list.filter(dataPoint => {
-                if (timeToFindIndex < timesToFind.length && Math.abs(dataPoint.dt - timesToFind[timeToFindIndex]) <= 3600) {
-                    timeToFindIndex++;
-                    return true;
-                }
+            var findtime = timesToFind[2];
 
-                return false;
-            });
+            var foundItem = data.list.find(dataPoint => Math.abs(dataPoint.dt - findtime) <= 3600);
+
+            var time = foundItem.dt_txt.slice(11);
+
+            // Filter data for nearest hour to noon.
+            filteredForData = data.list.filter(dataPoint => dataPoint.dt_txt.indexOf(time) > 0);
 
             callback(filteredForData);
         }).fail(function (err) { console.log(err) });
