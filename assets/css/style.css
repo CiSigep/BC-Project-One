@@ -1,6 +1,5 @@
-.royal-purple {
-    /* background-color: #663399!important; */
-    background-image: linear-gradient(#663399, #330055);
+.mh-200px{
+    max-height: 200px;
 }
 
 .navbar-logo {
@@ -15,3 +14,15 @@
 .navbar-dark .navbar-nav .navitem .active {
     color: rgba(255,255,255,1);
 }
+
+.royal-purple {
+    background-image: linear-gradient(#663399, #330055);
+}
+/* 
+@media (min-width: 576px) {}
+
+@media (min-width: 768px) {}
+
+@media (min-width: 992px) {}
+
+@media (min-width: 1200px) {} */
