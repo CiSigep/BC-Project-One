@@ -1,5 +1,5 @@
-.mh-200px{
-    max-height: 200px;
+.btn-mc {
+    background: #9D0C42;
 }
 
 .navbar-logo {
@@ -22,6 +22,7 @@
 .royal-purple {
     background-image: linear-gradient(#663399, #330055);
 }
+
 /* 
 @media (min-width: 576px) {}
 
