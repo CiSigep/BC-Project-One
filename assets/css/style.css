@@ -2,6 +2,13 @@
     background: #9D0C42;
 }
 
+.cardholder {
+    position: absolute;
+    top: 25px;
+    left: 5%;
+    width: 90%;
+}
+
 .navbar-logo {
     max-height: 40px;
 }
