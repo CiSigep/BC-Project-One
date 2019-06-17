@@ -91,5 +91,34 @@ $(() => {
         });
 
     }
+
+    $("form").validate({
+        errorPlacement: function(error, element){
+            if(element.attr("name") === "origin")
+                error.appendTo($("#errorOrigin"));
+            else if(element.attr("name") === "destination")
+                error.appendTo($("#errorDestination"));
+            else if(element.attr("name") === "departure")
+                error.appendTo($("#errorDepart"));
+            else
+                error.insertAfter(element);
+        }
+    });
+
+    $("#submitButton").click((e) => {
+        
+        if($("form").valid()){
+            console.log("Valid!");
+            console.log($("#originInput").val());
+            console.log($("#destinationInput").val());
+            console.log($("#departInput").val());
+            console.log($("#returnInput").val());
+        }
+        else{
+            console.log("NOT VALID!");
+        }
+
+        return false;
+    });
 });
 

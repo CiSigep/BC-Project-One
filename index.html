@@ -142,43 +142,48 @@
         <div class="row mx-0 text-white">
             <div class="col-md-2 d-none d-md-block bg-dark"></div>
             <div class="col-md-8 col-12 royal-purple">
-                <div class="container-fluid pt-2">
-                    <div class="row">
-                        <div class="col-12 col-sm-6 pt-1">
-                            <label for="originInput">Origin</label>
-                            <div class="input-group">
-                                <input type="text" name="origin" id="originInput" class="form-control"
-                                    placeholder="City, Countrycode">
+                <form>
+                    <div class="container-fluid pt-2">
+                        <div class="row">
+                            <div class="col-12 col-sm-6 pt-1">
+                                <label for="originInput">Origin</label>
+                                <span id="errorOrigin" class="text-danger"></span>
+                                <div class="input-group">
+                                    <input type="text" name="origin" id="originInput" class="form-control required"
+                                        placeholder="City, Countrycode" required>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 pt-1">
+                                <label for="destinationInput">Destination</label>
+                                <span id="errorDestination" class="text-danger"></span>
+                                <div class="input-group">
+                                    <input type="text" name="destination" id="destinationInput"
+                                        class="form-control required" placeholder="City, Countrycode" required>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 pt-1">
+                                <label for="departInput">Departure</label>
+                                <span id="errorDepart" class="text-danger"></span>
+                                <div class="input-group">
+                                    <input type="text" name="departure" id="departInput" class="form-control"
+                                        placeholder="mm/dd/yyyy" required>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 pt-1">
+                                <label for="returnInput">Return</label>
+                                <div class="input-group">
+                                    <input type="text" name="return" id="returnInput" class="form-control"
+                                        placeholder="mm/dd/yyyy">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-6 pt-1">
-                            <label for="destinationInput">Destination</label>
-                            <div class="input-group">
-                                <input type="text" name="destination" id="destinationInput" class="form-control"
-                                    placeholder="City, Countrycode">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6 pt-1">
-                            <label for="departInput">Departure</label>
-                            <div class="input-group">
-                                <input type="text" name="departure" id="departInput" class="form-control"
-                                    placeholder="mm/dd/yyyy">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6 pt-1">
-                            <label for="returnInput">Return</label>
-                            <div class="input-group">
-                                <input type="text" name="return" id="returnInput" class="form-control"
-                                    placeholder="mm/dd/yyyy">
+                        <div class="row py-2">
+                            <div class="col-12">
+                                <button id="submitButton" class="btn btn-mc text-white">Submit</button>
                             </div>
                         </div>
                     </div>
-                    <div class="row py-2">
-                        <div class="col-12">
-                            <button id="submitButton" class="btn btn-mc text-white">Submit</button>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
             <div class="col-md-2 d-none d-md-block bg-dark"></div>
         </div>
