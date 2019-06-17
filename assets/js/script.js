@@ -1,3 +1,4 @@
+// Fligth JS //
 $(() => {
 
     $("#departInput").datepicker({
@@ -92,4 +93,82 @@ $(() => {
 
     }
 });
+
+// Event JS//
+// Make a function that passes data from the eventData and puts it in this function
+function theEventData(data) {
+    var eventData = [];
+    for (var i = 0; i < data.events.length; i++) {
+        var emptyObj = {};
+        emptyObj.name = data.events[i].name.text;
+        if (!data.events[i].description.text) {
+            emptyObj.description = "No Description";
+        }
+        else {
+            if (data.events[i].description.text.length > 50)
+                emptyObj.description = data.events[i].description.text.substr(0, 50) + "...";
+            else
+                emptyObj.description = data.events[i].description.text;
+
+        }
+        emptyObj.start = data.events[i].start.local;
+        emptyObj.end = data.events[i].end.local;
+        emptyObj.url = data.events[i].url;
+        // Ternary Expression
+        emptyObj.is_free = data.events[i].is_free ? "Yes" : "No";
+        eventData.push(emptyObj);
+    }
+
+    $(".cardholder").fadeIn();
+
+    $("#eventTable").DataTable({
+        data: eventData,
+        paging: false,
+        info: false,
+        responsive: true,
+        scrollY: "100px",
+        data: eventData,
+        columns: [
+            {
+                title: "Name",
+                data: "name",
+                responsivePriority: 1
+            },
+            {
+                title: "Description",
+                data: "description",
+                responsivePriority: 2
+            },
+            {
+                title: "Start Date",
+                data: "start",
+                render: function (data) {
+                    var start = moment(data);
+                    return start.format("MMMM Do YYYY, h:mm:ss a");
+                },
+                responsivePriority: 3
+            },
+            {
+                title: "End Date",
+                data: "end",
+                render: function (data) {
+                    var end = moment(data);
+                    return end.format("MMMM Do YYYY, h:mm:ss a");
+                },
+                responsivePriority: 3
+            },
+            {
+                title: "URL",
+                data: "url",
+                responsivePriority: 5
+            },
+            {
+                title: "Free?",
+                data: "is_free",
+                responsivePriority: 6
+            }
+        ]
+    });
+    console.log(eventData);
+}
 
