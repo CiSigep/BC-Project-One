@@ -155,7 +155,7 @@ function theEventData(data) {
                     var end = moment(data);
                     return end.format("MMMM Do YYYY, h:mm:ss a");
                 },
-                responsivePriority: 3
+                responsivePriority: 4
             },
             {
                 title: "URL",
