@@ -1,3 +1,4 @@
+// Fligth JS //
 $(() => {
 
     $("#departInput").datepicker({
@@ -22,8 +23,6 @@ $(() => {
 
             quotes.push(quote);
         }
-
-        $(".cardholder").fadeIn();
 
         $("#flightTable").DataTable({
             data: quotes,
@@ -91,14 +90,110 @@ $(() => {
         });
 
     }
+    // Event JS//
+    // Make a function that passes data from the eventData and puts it in this function
+    function theEventData(data) {
+        var eventData = [];
+        for (var i = 0; i < data.events.length; i++) {
+            var emptyObj = {};
+            emptyObj.name = data.events[i].name.text;
+            if (!data.events[i].description.text) {
+                emptyObj.description = "No Description";
+            }
+            else {
+                if (data.events[i].description.text.length > 50)
+                    emptyObj.description = data.events[i].description.text.substr(0, 50) + "...";
+                else
+                    emptyObj.description = data.events[i].description.text;
 
-    $("form").validate({
-        errorPlacement: function(error, element){
-            if(element.attr("name") === "origin")
+            }
+            emptyObj.start = data.events[i].start.local;
+            emptyObj.end = data.events[i].end.local;
+            emptyObj.url = data.events[i].url;
+            // Ternary Expression
+            emptyObj.is_free = data.events[i].is_free ? "Yes" : "No";
+            eventData.push(emptyObj);
+        }
+
+        $("#eventTable").DataTable({
+            data: eventData,
+            paging: false,
+            info: false,
+            responsive: true,
+            scrollY: "100px",
+            data: eventData,
+            columns: [
+                {
+                    title: "Name",
+                    data: "name",
+                    responsivePriority: 1
+                },
+                {
+                    title: "Description",
+                    data: "description",
+                    responsivePriority: 2
+                },
+                {
+                    title: "Start Date",
+                    data: "start",
+                    render: function (data) {
+                        var start = moment(data);
+                        return start.format("MMMM Do YYYY, h:mm:ss a");
+                    },
+                    responsivePriority: 3
+                },
+                {
+                    title: "End Date",
+                    data: "end",
+                    render: function (data) {
+                        var end = moment(data);
+                        return end.format("MMMM Do YYYY, h:mm:ss a");
+                    },
+                    responsivePriority: 4
+                },
+                {
+                    title: "URL",
+                    data: "url",
+                    responsivePriority: 5
+                },
+                {
+                    title: "Free?",
+                    data: "is_free",
+                    responsivePriority: 6
+                }
+            ]
+        });
+    }
+
+    function sendData(org, dest, startMoment, endMoment) {
+        var endFlight, endEvent;
+
+        if (endMoment) {
+            endFlight = endMoment.format("YYYY-MM-DD");
+            endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
+        }
+
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), writeFlight, endFlight);
+        dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), theEventData, endEvent);
+        getForecast($("#destinationInput").val(), function(d){console.log(d)});
+
+        $("#multipleCities").modal("hide");
+
+        $(".carousel-control-prev").fadeOut();
+        $(".carousel-control-next").fadeOut();
+        $(".carousel-caption").fadeOut(function () {
+            $(this).removeClass("d-md-block");
+        });
+        $(".carousel-indicators").fadeOut();
+    }
+
+    $("#searchForm").validate({
+        errorPlacement: function (error, element) {
+            if (element.attr("name") === "origin")
                 error.appendTo($("#errorOrigin"));
-            else if(element.attr("name") === "destination")
+            else if (element.attr("name") === "destination")
                 error.appendTo($("#errorDestination"));
-            else if(element.attr("name") === "departure")
+            else if (element.attr("name") === "departure")
                 error.appendTo($("#errorDepart"));
             else
                 error.insertAfter(element);
@@ -106,19 +201,77 @@ $(() => {
     });
 
     $("#submitButton").click((e) => {
-        
-        if($("form").valid()){
-            console.log("Valid!");
-            console.log($("#originInput").val());
-            console.log($("#destinationInput").val());
-            console.log($("#departInput").val());
-            console.log($("#returnInput").val());
-        }
-        else{
-            console.log("NOT VALID!");
+
+        if ($("#searchForm").valid()) {
+            $("#searchStatus").html("<img src='assets/images/ajax-loader.gif' alt='Loading' style='max-height:30px'>");
+            getCity($("#destinationInput").val(), function (dataDestination) {
+                if (dataDestination.Places.length === 0) {
+                    $("#searchStatus").empty();
+                    $("#notFoundContent").text("Your destination was not found.");
+                    $("#notFoundModal").modal();
+                }
+                else {
+                    getCity($("#originInput").val(), function (dataOrigin) {
+                        $("#searchStatus").empty();
+                        if (dataOrigin.Places.length === 0) {
+                            $("#notFoundContent").text("Your origin was not found.");
+                            $("#notFoundModal").modal();
+                        }
+                        else if (dataOrigin.Places.length > 1 || dataDestination.Places.length > 1) {
+                            $("#originSelect").empty();
+                            $("#destinationSelect").empty();
+                            for (var i = 0; i < dataOrigin.Places.length; i++) {
+                                var opt = $("<option>");
+
+                                opt.text(dataOrigin.Places[i].PlaceName + " " + dataOrigin.Places[i].PlaceId);
+                                opt.attr("value", dataOrigin.Places[i].PlaceId);
+
+                                $("#originSelect").append(opt);
+                            }
+                            for (var i = 0; i < dataDestination.Places.length; i++) {
+                                var opt = $("<option>");
+
+                                opt.text(dataDestination.Places[i].PlaceName + " " + dataDestination.Places[i].PlaceId);
+                                opt.attr("value", dataDestination.Places[i].PlaceId);
+
+                                $("#destinationSelect").append(opt);
+                            }
+                            $("#multipleCities").modal();
+                        }
+                        else if (dataOrigin.Places.length === 1 && dataDestination.Places.length === 1) {
+                            var org = dataOrigin.Places[0].PlaceId;
+                            var dest = dataDestination.Places[0].PlaceId;
+                            var depart = moment($("#departInput").val(), "MM-DD-YYYY");
+                            var ret;
+
+                            if ($("#returnInput").val().length > 0) {
+                                ret = moment($("#returnInput").val(), "MM-DD-YYYY");
+                            }
+
+                            sendData(org, dest, depart, ret);
+                        }
+
+                    });
+                }
+            });
         }
 
         return false;
     });
+
+    $("#selectBtn").click(() => {
+        var org = $("#originSelect").val();
+        var dest = $("#destinationSelect").val();
+        var depart = moment($("#departInput").val(), "MM-DD-YYYY");
+        var ret;
+
+        if ($("#returnInput").val().length > 0) {
+            ret = moment($("#returnInput").val(), "MM-DD-YYYY");
+        }
+
+        sendData(org, dest, depart, ret);
+    })
+
 });
+
 

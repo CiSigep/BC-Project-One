@@ -18,8 +18,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
-    <script type="text/javascript"
-        src="https://cdn.datatables.net/v/bs4/dt-1.10.18/r-2.2.2/sc-2.0.0/datatables.min.js"></script>
+    <script src="https://cdn.datatables.net/v/bs4/dt-1.10.18/r-2.2.2/sc-2.0.0/datatables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.min.js"></script>
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
@@ -35,7 +34,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark royal-purple ">
             <a href="#" class="navbar-brand"><img class="navbar-logo" src="assets/images/logo.png" alt="Logo"></a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse " id="navbarNav">
@@ -53,6 +52,54 @@
             </div>
         </nav>
         <div class="relative">
+            <div class="modal fade" id="multipleCities" tabindex="-1" role="dialog"
+                aria-labelledby="multipleCitiesLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="multipleCitiesLabel">Which one?</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Multiple cities were found for your origin or destination, please select the appropriate
+                            one.
+                            <form>
+                                <div class="form-group">
+                                    <label for="originSelect" class="col-form-label">Origin:</label>
+                                    <select class="form-control" id="originSelect"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="destinationSelect" class="col-form-label">Destination:</label>
+                                    <select class="form-control" id="destinationSelect"></select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="selectBtn" type="button" class="btn btn-primary">Select</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="notFoundModal" tabindex="-1" role="dialog" aria-labelledby="notFoundModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="notFoundModalLabel">Not Found</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="notFoundContent">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
                 <ol class="carousel-indicators">
                     <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
@@ -64,16 +111,14 @@
                 </ol>
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <img class="d-block w-100" src="./assets/images/traveling.jpg" class="img-fluid"
-                            alt="First slide">
+                        <img class="d-block w-100 img-fluid" src="./assets/images/traveling.jpg" alt="First slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>Using Magic Carpet</h5>
                             <p>will take you to a whole new world...</p>
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="./assets/images/Canyon.jpg" class="img-fluid"
-                            alt="Second slide">
+                        <img class="d-block w-100 img-fluid" src="./assets/images/Canyon.jpg" alt="Second slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>Bryce Canyon National Park</h5>
                             <p>Bryce Canyon National Park, a reserve in southern Utah, that is known for crimson-colored
@@ -81,8 +126,7 @@
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="./assets/images/Iceland.jpg" class="img-fluid"
-                            alt="Third slide">
+                        <img class="d-block w-100 img-fluid" src="./assets/images/Iceland.jpg" alt="Third slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>Aurora Borealis</h5>
                             <p>From september to april, Iceland is a hotspot for this magnificent lightshow. The Aurora
@@ -90,7 +134,7 @@
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="./assets/images/India.jpg" class="img-fluid" alt="Fourth slide">
+                        <img class="d-block w-100 img-fluid" src="./assets/images/India.jpg" alt="Fourth slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>Camel Riding in India</h5>
                             <p>One of the most unforgettable and enchanting experiences you can have in India is to ride
@@ -99,7 +143,7 @@
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="./assets/images/Italy.jpg" class="img-fluid" alt="Fifth slide">
+                        <img class="d-block w-100 img-fluid" src="./assets/images/Italy.jpg" alt="Fifth slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>Florence, Italy</h5>
                             <p>Florence, capital of Italy’s Tuscany region, is home to many masterpieces of Renaissance
@@ -108,7 +152,7 @@
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="./assets/images/London.jpg" class="img-fluid" alt="Sixth slide">
+                        <img class="d-block w-100" src="./assets/images/London.jpg" alt="Sixth slide">
                         <div class="carousel-caption d-none d-md-block">
                             <h5>London, England</h5>
                             <p>Home to the royals, birthplace of high tea and posh accents. At its center stands the
@@ -130,11 +174,19 @@
             </div>
             <div class="cardholder" style="display: none">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header p-2">
                         Flights
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-2">
                         <table id="flightTable" class="table responsive"></table>
+                    </div>
+                </div>
+                <div class="card mt-1">
+                    <div class="card-header p-2">
+                        Events
+                    </div>
+                    <div class="card-body p-2">
+                        <table id="eventTable" class="table responsive"></table>
                     </div>
                 </div>
             </div>
@@ -142,7 +194,7 @@
         <div class="row mx-0 text-white">
             <div class="col-md-2 d-none d-md-block bg-dark"></div>
             <div class="col-md-8 col-12 royal-purple">
-                <form>
+                <form id="searchForm">
                     <div class="container-fluid pt-2">
                         <div class="row">
                             <div class="col-12 col-sm-6 pt-1">
@@ -150,7 +202,7 @@
                                 <span id="errorOrigin" class="text-danger"></span>
                                 <div class="input-group">
                                     <input type="text" name="origin" id="originInput" class="form-control required"
-                                        placeholder="City, Countrycode" required>
+                                        placeholder="City" required>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 pt-1">
@@ -158,7 +210,7 @@
                                 <span id="errorDestination" class="text-danger"></span>
                                 <div class="input-group">
                                     <input type="text" name="destination" id="destinationInput"
-                                        class="form-control required" placeholder="City, Countrycode" required>
+                                        class="form-control required" placeholder="City" required>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 pt-1">
@@ -180,6 +232,7 @@
                         <div class="row py-2">
                             <div class="col-12">
                                 <button id="submitButton" class="btn btn-mc text-white">Submit</button>
+                                <span id="searchStatus"></span>
                             </div>
                         </div>
                     </div>
