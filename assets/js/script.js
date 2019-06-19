@@ -32,9 +32,6 @@ $(() => {
             quotes.push(quote);
         }
 
-        if (flightTable)
-            flightTable.destroy();
-
         flightTable = $("#flightTable").DataTable({
             data: quotes,
             paging: false,
@@ -126,9 +123,6 @@ $(() => {
             emptyObj.is_free = data.events[i].is_free ? "Yes" : "No";
             eventData.push(emptyObj);
         }
-
-        if (eventTable)
-            eventTable.destroy();
 
         eventTable = $("#eventTable").DataTable({
             data: eventData,
@@ -248,6 +242,7 @@ $(() => {
                     $(".cardholder").fadeIn(function () {
                         writeFlight(flightData);
                         theEventData(eventData);
+                        $("#clearButton").removeClass("disabled");
                     });
 
                 });
@@ -358,6 +353,29 @@ $(() => {
         }
 
         sendData(org, dest, depart, ret);
+    });
+
+    $("#clearButton").click((e) => {
+        if($(e.target).hasClass("disabled"))
+            return;
+
+        $(".cardholder").fadeOut();
+        $(".cardholder-overlay").fadeOut(function(){
+            flightTable.destroy();
+            eventTable.destroy();
+
+            $("#flightTable").empty();
+            $("#eventTable").empty();
+
+            $("#clearButton").addClass("disabled");
+
+            $(".carousel-control-prev").fadeIn();
+            $(".carousel-control-next").fadeIn();
+            $(".carousel-caption").fadeIn(function () {
+                $(this).addClass("d-md-block");
+            });
+            $(".carousel-indicators").fadeIn();
+        });
     });
 
 
