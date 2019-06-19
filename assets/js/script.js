@@ -1,6 +1,9 @@
 // Fligth JS //
 $(() => {
 
+
+    var flightTable, eventTable;
+
     $("#departInput").datepicker({
         format: "mm/dd/yyyy"
     });
@@ -8,6 +11,11 @@ $(() => {
     $("#returnInput").datepicker({
         format: "mm/dd/yyyy"
     });
+
+    $.validator.addMethod("dateFormat", function (value, element) {
+        var dtRegex = new RegExp(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{4}\b/);
+        return this.optional(element) || dtRegex.test(value);
+    }, "Date format must be mm/dd/yyyy");
 
 
     function writeFlight(flight) {
@@ -24,14 +32,16 @@ $(() => {
             quotes.push(quote);
         }
 
-        $(".cardholder").fadeIn();
+        if (flightTable)
+            flightTable.destroy();
 
-        $("#flightTable").DataTable({
+        flightTable = $("#flightTable").DataTable({
             data: quotes,
             paging: false,
             info: false,
             responsive: true,
             scrollY: "100px",
+            select: "single",
             columns: [
                 {
                     title: "Minimum Price",
@@ -117,15 +127,17 @@ $(() => {
             eventData.push(emptyObj);
         }
 
-        $(".cardholder").fadeIn();
+        if (eventTable)
+            eventTable.destroy();
 
-        $("#eventTable").DataTable({
+        eventTable = $("#eventTable").DataTable({
             data: eventData,
             paging: false,
             info: false,
             responsive: true,
             scrollY: "100px",
             data: eventData,
+            select: "multi",
             columns: [
                 {
                     title: "Name",
@@ -167,11 +179,7 @@ $(() => {
                 }
             ]
         });
-        console.log(eventData);
     }
-
-
-
     // Weather JS //
     function weatherData(data) {
         var forecastData = [];
@@ -225,5 +233,134 @@ $(() => {
 
         }
     }
+
+    function sendData(org, dest, startMoment, endMoment) {
+        var endFlight, endEvent;
+
+        if (endMoment) {
+            endFlight = endMoment.format("YYYY-MM-DD");
+            endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
+        }
+
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function(data) {
+            writeFlight(data);
+            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function(data) {
+                theEventData(data);
+                getForecast($("#destinationInput").val(), function(data) {
+                    weatherData(data);
+                    $(".cardholder").fadeIn();
+
+                    flightTable.responsive.recalc();
+                    eventTable.responsive.recalc();
+                });
+            }, endEvent);
+        }, endFlight);
+
+        $("#multipleCities").modal("hide");
+
+        $(".carousel-control-prev").fadeOut();
+        $(".carousel-control-next").fadeOut();
+        $(".carousel-caption").fadeOut(function () {
+            $(this).removeClass("d-md-block");
+        });
+        $(".carousel-indicators").fadeOut();
+    }
+
+    $("#searchForm").validate({
+        rules: {
+            departure: {
+                required: true,
+                dateFormat: true
+            },
+            return: {
+                dateFormat: true
+            }
+        },
+        errorPlacement: function (error, element) {
+            if (element.attr("name") === "origin")
+                error.appendTo($("#errorOrigin"));
+            else if (element.attr("name") === "destination")
+                error.appendTo($("#errorDestination"));
+            else if (element.attr("name") === "departure")
+                error.appendTo($("#errorDepart"));
+            else if (element.att("name") === "return")
+                error.appendTo($("#errorReturn"));
+            else
+                error.insertAfter(element);
+        }
+    });
+
+    $("#submitButton").click((e) => {
+
+        if ($("#searchForm").valid()) {
+            $("#searchStatus").html("<img src='assets/images/ajax-loader.gif' alt='Loading' style='max-height:30px'>");
+            getCity($("#destinationInput").val(), function (dataDestination) {
+                if (dataDestination.Places.length === 0) {
+                    $("#searchStatus").empty();
+                    $("#notFoundContent").text("Your destination was not found.");
+                    $("#notFoundModal").modal();
+                }
+                else {
+                    getCity($("#originInput").val(), function (dataOrigin) {
+                        $("#searchStatus").empty();
+                        if (dataOrigin.Places.length === 0) {
+                            $("#notFoundContent").text("Your origin was not found.");
+                            $("#notFoundModal").modal();
+                        }
+                        else if (dataOrigin.Places.length > 1 || dataDestination.Places.length > 1) {
+                            $("#originSelect").empty();
+                            $("#destinationSelect").empty();
+                            for (var i = 0; i < dataOrigin.Places.length; i++) {
+                                var opt = $("<option>");
+
+                                opt.text(dataOrigin.Places[i].PlaceName + " " + dataOrigin.Places[i].PlaceId);
+                                opt.attr("value", dataOrigin.Places[i].PlaceId);
+
+                                $("#originSelect").append(opt);
+                            }
+                            for (var i = 0; i < dataDestination.Places.length; i++) {
+                                var opt = $("<option>");
+
+                                opt.text(dataDestination.Places[i].PlaceName + " " + dataDestination.Places[i].PlaceId);
+                                opt.attr("value", dataDestination.Places[i].PlaceId);
+
+                                $("#destinationSelect").append(opt);
+                            }
+                            $("#multipleCities").modal();
+                        }
+                        else if (dataOrigin.Places.length === 1 && dataDestination.Places.length === 1) {
+                            var org = dataOrigin.Places[0].PlaceId;
+                            var dest = dataDestination.Places[0].PlaceId;
+                            var depart = moment($("#departInput").val(), "MM-DD-YYYY");
+                            var ret;
+
+                            if ($("#returnInput").val().length > 0) {
+                                ret = moment($("#returnInput").val(), "MM-DD-YYYY");
+                            }
+
+                            sendData(org, dest, depart, ret);
+                        }
+
+                    });
+                }
+            });
+        }
+
+        return false;
+    });
+
+    $("#selectBtn").click(() => {
+        var org = $("#originSelect").val();
+        var dest = $("#destinationSelect").val();
+        var depart = moment($("#departInput").val(), "MM-DD-YYYY");
+        var ret;
+
+        if ($("#returnInput").val().length > 0) {
+            ret = moment($("#returnInput").val(), "MM-DD-YYYY");
+        }
+
+        sendData(org, dest, depart, ret);
+    });
+
 
 });
