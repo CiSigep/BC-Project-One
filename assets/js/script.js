@@ -182,6 +182,7 @@ $(() => {
     }
     // Weather JS //
     function weatherData(data) {
+        $("#weatherCard").html("<div class='col-lg-1 col-md-2 d-none d-sm-block'></div>");
         var forecastData = [];
         for (var i = 0; i < data.length; i++) {
             var forecasts = {};
@@ -199,12 +200,9 @@ $(() => {
             var colDiv = $("<div>");
             colDiv.addClass("text-center col-lg-2 col-md-4 col-12 mt-lg-0 mt-1 border");
 
-
-
             var dateDiv = $("<div>");
             dateDiv.text(forecastData[i].date.format("MM/DD/YYYY"));
             colDiv.append(dateDiv);
-
 
             var iconDiv = $("<img>",
                 {
