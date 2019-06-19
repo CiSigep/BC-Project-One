@@ -40,7 +40,7 @@ $(() => {
             paging: false,
             info: false,
             responsive: true,
-            scrollY: "100px",
+            scrollY: "200px",
             select: "single",
             columns: [
                 {
@@ -135,7 +135,7 @@ $(() => {
             paging: false,
             info: false,
             responsive: true,
-            scrollY: "100px",
+            scrollY: "200px",
             data: eventData,
             select: "multi",
             columns: [
@@ -240,11 +240,12 @@ $(() => {
             endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
         }
 
-        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function(flightData) {
-            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function(eventData) {
-                getForecast($("#destinationInput").val(), function(weaData) {
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function (flightData) {
+            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function (eventData) {
+                getForecast($("#destinationInput").val(), function (weaData) {
                     weatherData(weaData);
-                    $(".cardholder").fadeIn(function(){
+                    $(".cardholder-overlay").fadeIn();
+                    $(".cardholder").fadeIn(function () {
                         writeFlight(flightData);
                         theEventData(eventData);
                     });
