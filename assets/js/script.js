@@ -242,16 +242,15 @@ $(() => {
             endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
         }
 
-        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function(data) {
-            writeFlight(data);
-            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function(data) {
-                theEventData(data);
-                getForecast($("#destinationInput").val(), function(data) {
-                    weatherData(data);
-                    $(".cardholder").fadeIn();
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function(flightData) {
+            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function(eventData) {
+                getForecast($("#destinationInput").val(), function(weaData) {
+                    weatherData(weaData);
+                    $(".cardholder").fadeIn(function(){
+                        writeFlight(flightData);
+                        theEventData(eventData);
+                    });
 
-                    flightTable.responsive.recalc();
-                    eventTable.responsive.recalc();
                 });
             }, endEvent);
         }, endFlight);
