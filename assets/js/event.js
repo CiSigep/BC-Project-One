@@ -12,6 +12,7 @@ function dateEvent(city, startDate, callback, endDate) {
         }).done(callback)
             .fail((err) => {
                 console.log("FAILED: " + err);
+                $("#searchStatus").text("An Error Occured. Please try again later.");
             });
 };
 

@@ -1,6 +1,9 @@
 // Fligth JS //
 $(() => {
 
+
+    var flightTable, eventTable;
+
     $("#departInput").datepicker({
         format: "mm/dd/yyyy"
     });
@@ -8,6 +11,11 @@ $(() => {
     $("#returnInput").datepicker({
         format: "mm/dd/yyyy"
     });
+
+    $.validator.addMethod("dateFormat", function(value, element){
+        var dtRegex = new RegExp(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{4}\b/);
+        return this.optional(element) || dtRegex.test(value);
+    }, "Date format must be mm/dd/yyyy");
 
 
     function writeFlight(flight) {
@@ -24,12 +32,16 @@ $(() => {
             quotes.push(quote);
         }
 
-        $("#flightTable").DataTable({
+        if(flightTable)
+            flightTable.destroy();
+
+        flightTable = $("#flightTable").DataTable({
             data: quotes,
             paging: false,
             info: false,
             responsive: true,
             scrollY: "100px",
+            select: "single",
             columns: [
                 {
                     title: "Minimum Price",
@@ -115,13 +127,17 @@ $(() => {
             eventData.push(emptyObj);
         }
 
-        $("#eventTable").DataTable({
+        if(eventTable)
+            eventTable.destroy();
+
+        eventTable = $("#eventTable").DataTable({
             data: eventData,
             paging: false,
             info: false,
             responsive: true,
             scrollY: "100px",
             data: eventData,
+            select: "multi",
             columns: [
                 {
                     title: "Name",
@@ -188,6 +204,15 @@ $(() => {
     }
 
     $("#searchForm").validate({
+        rules:{
+            departure : {
+                required: true,
+                dateFormat: true
+            },
+            return : {
+                dateFormat: true
+            }
+        },
         errorPlacement: function (error, element) {
             if (element.attr("name") === "origin")
                 error.appendTo($("#errorOrigin"));
@@ -195,6 +220,8 @@ $(() => {
                 error.appendTo($("#errorDestination"));
             else if (element.attr("name") === "departure")
                 error.appendTo($("#errorDepart"));
+            else if (element.att("name") === "return")
+                error.appendTo($("#errorReturn"));
             else
                 error.insertAfter(element);
         }

@@ -8,6 +8,7 @@ function getCity(cityName, callback){
         }
     }).done(callback).fail((err) => {
         console.log("FAILED: " + err);
+        $("#searchStatus").text("An Error Occured. Please try again later.");
     });
 }
 
@@ -26,5 +27,6 @@ function getRoute(start, end, outboundDate, callback, inboundDate) {
         }
     }).done(callback).fail((err) => {
         console.log("FAILED: " + err);
+        $("#searchStatus").text("An Error Occured. Please try again later.");
     });
 }
