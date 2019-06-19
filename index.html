@@ -34,6 +34,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark royal-purple ">
             <a href="#" class="navbar-brand"><img class="navbar-logo" src="assets/images/logo.png" alt="Logo"></a>
             <div class="ml-auto">
+                <button id="saveButton" class="btn btn-mc text-white disabled">Save</button>
                 <button id="clearButton" class="btn btn-mc text-white disabled">Clear</button>
             </div>
         </nav>
@@ -191,8 +192,8 @@
                                     <label for="departInput">Departure</label>
                                     <span id="errorDepart" class="text-danger"></span>
                                     <div class="input-group">
-                                        <input type="text" name="departure" id="departInput" class="form-control"
-                                            placeholder="mm/dd/yyyy" required>
+                                        <input type="text" name="departure" id="departInput"
+                                            class="form-control dateAfter-check" placeholder="mm/dd/yyyy" required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-sm-6 pt-1">
