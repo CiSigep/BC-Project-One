@@ -12,7 +12,7 @@ $(() => {
         format: "mm/dd/yyyy"
     });
 
-    $.validator.addMethod("dateFormat", function(value, element){
+    $.validator.addMethod("dateFormat", function (value, element) {
         var dtRegex = new RegExp(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{4}\b/);
         return this.optional(element) || dtRegex.test(value);
     }, "Date format must be mm/dd/yyyy");
@@ -32,7 +32,7 @@ $(() => {
             quotes.push(quote);
         }
 
-        if(flightTable)
+        if (flightTable)
             flightTable.destroy();
 
         flightTable = $("#flightTable").DataTable({
@@ -127,7 +127,7 @@ $(() => {
             eventData.push(emptyObj);
         }
 
-        if(eventTable)
+        if (eventTable)
             eventTable.destroy();
 
         eventTable = $("#eventTable").DataTable({
@@ -180,6 +180,59 @@ $(() => {
             ]
         });
     }
+    // Weather JS //
+    function weatherData(data) {
+        var forecastData = [];
+        for (var i = 0; i < data.length; i++) {
+            var forecasts = {};
+            forecasts.date = moment(data[i].dt_txt);
+            forecasts.icon = data[i].weather[0].icon;
+            forecasts.temp = (data[i].main.temp - 273.15) * 1.80 + 32;
+            forecasts.temp1 = data[i].main.temp - 273.15;
+            forecasts.main = data[i].weather[0].main;
+            forecasts.humidity = (data[i].main.humidity + "%");
+            forecastData.push(forecasts);
+        }
+
+
+        for (var i = 0; i < forecastData.length; i++) {
+            var colDiv = $("<div>");
+            colDiv.addClass("text-center col-lg-2 col-md-4 col-12 mt-lg-0 mt-1 border");
+
+
+
+            var dateDiv = $("<div>");
+            dateDiv.text(forecastData[i].date.format("MM/DD/YYYY"));
+            colDiv.append(dateDiv);
+
+
+            var iconDiv = $("<img>",
+                {
+                    src: "https://openweathermap.org/img/w/" + forecastData[i].icon + ".png",
+                    alt: forecastData.main,
+                });
+
+            colDiv.append(iconDiv);
+
+            mainDiv = $("<div>");
+            mainDiv.text(forecastData[i].main);
+            colDiv.append(mainDiv);
+
+            var farDiv = $("<div>");
+            farDiv.text(forecastData[i].temp.toPrecision(3) + "° F");
+            colDiv.append(farDiv);
+
+            var celDiv = $("<div>");
+            celDiv.text(forecastData[i].temp1.toPrecision(3) + "° C");
+            colDiv.append(celDiv);
+
+            var humDiv = $("<div>");
+            colDiv.append(humDiv);
+
+            $("#weatherCard").append(colDiv);
+
+        }
+    }
 
     function sendData(org, dest, startMoment, endMoment) {
         var endFlight, endEvent;
@@ -189,9 +242,19 @@ $(() => {
             endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
         }
 
-        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), writeFlight, endFlight);
-        dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), theEventData, endEvent);
-        getForecast($("#destinationInput").val(), function(d){console.log(d)});
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function(data) {
+            writeFlight(data);
+            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function(data) {
+                theEventData(data);
+                getForecast($("#destinationInput").val(), function(data) {
+                    weatherData(data);
+                    $(".cardholder").fadeIn();
+
+                    flightTable.responsive.recalc();
+                    eventTable.responsive.recalc();
+                });
+            }, endEvent);
+        }, endFlight);
 
         $("#multipleCities").modal("hide");
 
@@ -204,12 +267,12 @@ $(() => {
     }
 
     $("#searchForm").validate({
-        rules:{
-            departure : {
+        rules: {
+            departure: {
                 required: true,
                 dateFormat: true
             },
-            return : {
+            return: {
                 dateFormat: true
             }
         },
@@ -297,8 +360,7 @@ $(() => {
         }
 
         sendData(org, dest, depart, ret);
-    })
+    });
+
 
 });
-
-
