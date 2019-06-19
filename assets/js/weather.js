@@ -1,3 +1,4 @@
+// Calls the weather API to grab our forecast.
 function getForecast(city, callback) {
 
     var APIKey = "3ac41c12ffcc7dc523f176cc6f0ff210";
@@ -8,7 +9,7 @@ function getForecast(city, callback) {
         url: queryURL
     }).done(function (data) {
 
-        var offset = data.timezone;
+        var offset = data.timezone; // current weather call contains a unix seconds UTC time offset for timezones.
 
         $.get({
             url: queryURL2

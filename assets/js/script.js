@@ -1,9 +1,10 @@
-// Fligth JS //
 $(() => {
 
 
-    var flightTable, eventTable;
+    var flightTable, eventTable; // Holds our tables so we can destroy them if the users do another search
+    var weatherCity; // Holds the city we get the weather for
 
+    // Create our Datepickers
     $("#departInput").datepicker({
         format: "mm/dd/yyyy"
     });
@@ -12,12 +13,24 @@ $(() => {
         format: "mm/dd/yyyy"
     });
 
+    // Add validator methods for dates
     $.validator.addMethod("dateFormat", function (value, element) {
         var dtRegex = new RegExp(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{4}\b/);
         return this.optional(element) || dtRegex.test(value);
     }, "Date format must be mm/dd/yyyy");
 
+    $.validator.addMethod("dateAfter", function (value, element) {
+        if ($(".dateAfter-check").val() === "" || value === "")
+            return true;
 
+        var checkAgainst = moment($(".dateAfter-check").val(), "MM-DD-YYYY");
+        var ourMoment = moment(value, "MM-DD-YYYY");
+
+        return this.optional(element) || ourMoment.isAfter(checkAgainst);
+    }, "The return date must be after the departure date");
+
+
+    // Prepare the flight data for tha table and call create.
     function writeFlight(flight) {
         var quotes = [];
         for (var i = 0; i < flight.Quotes.length; i++) {
@@ -28,10 +41,135 @@ $(() => {
             quote.depart = flight.Quotes[i].OutboundLeg.DepartureDate;
             quote.start = flight.Places.find((place) => place.PlaceId === flight.Quotes[i].OutboundLeg.OriginId);
             quote.end = flight.Places.find((place) => place.PlaceId === flight.Quotes[i].OutboundLeg.DestinationId);
+            quote.id = flight.Quotes[i].QuoteId;
 
             quotes.push(quote);
         }
 
+        createFlightTable(quotes);
+    }
+
+    // Prepare the event data for the event table and call create.
+    function theEventData(data) {
+        var eventData = [];
+        for (var i = 0; i < data.events.length; i++) {
+            var emptyObj = {};
+            emptyObj.name = data.events[i].name.text;
+            if (!data.events[i].description.text) {
+                emptyObj.description = "No Description";
+            }
+            else {
+                if (data.events[i].description.text.length > 50)
+                    emptyObj.description = data.events[i].description.text.substr(0, 50) + "...";
+                else
+                    emptyObj.description = data.events[i].description.text;
+
+            }
+            emptyObj.start = data.events[i].start.local;
+            emptyObj.end = data.events[i].end.local;
+            emptyObj.url = data.events[i].url;
+            emptyObj.is_free = data.events[i].is_free ? "Yes" : "No";
+            emptyObj.id = data.events[i].id;
+            eventData.push(emptyObj);
+        }
+
+        createEventTable(eventData);
+    }
+
+    // Write the weather data in human readable format
+    function weatherData(data) {
+        $("#weatherCard").html("<div class='col-lg-1 col-md-2 d-none d-sm-block'></div>");
+        var forecastData = [];
+        for (var i = 0; i < data.length; i++) {
+            var forecasts = {};
+            forecasts.date = moment(data[i].dt_txt);
+            forecasts.icon = data[i].weather[0].icon;
+            forecasts.temp = (data[i].main.temp - 273.15) * 1.80 + 32;
+            forecasts.temp1 = data[i].main.temp - 273.15;
+            forecasts.main = data[i].weather[0].main;
+            forecasts.humidity = (data[i].main.humidity + "%");
+            forecastData.push(forecasts);
+        }
+
+        // Write to our card
+        for (var i = 0; i < forecastData.length; i++) {
+            var colDiv = $("<div>");
+            colDiv.addClass("text-center col-lg-2 col-md-4 col-12 mt-lg-0 mt-1 border");
+
+            var dateDiv = $("<div>");
+            dateDiv.text(forecastData[i].date.format("MM/DD/YYYY"));
+            colDiv.append(dateDiv);
+
+            var iconDiv = $("<img>", {
+                src: "https://openweathermap.org/img/w/" + forecastData[i].icon + ".png",
+                alt: forecastData.main,
+            });
+
+            colDiv.append(iconDiv);
+
+            mainDiv = $("<div>");
+            mainDiv.text(forecastData[i].main);
+            colDiv.append(mainDiv);
+
+            var farDiv = $("<div>");
+            farDiv.text(forecastData[i].temp.toPrecision(3) + "° F");
+            colDiv.append(farDiv);
+
+            var celDiv = $("<div>");
+            celDiv.text(forecastData[i].temp1.toPrecision(3) + "° C");
+            colDiv.append(celDiv);
+
+            var humDiv = $("<div>");
+            colDiv.append(humDiv);
+
+            $("#weatherCard").append(colDiv);
+
+        }
+    }
+
+    // Send off our data to the APIs
+    function sendData(org, dest, startMoment, endMoment) {
+        var endFlight, endEvent;
+
+        // The APIs accept different time formats, so format forthe right ones
+        if (endMoment) {
+            endFlight = endMoment.format("YYYY-MM-DD");
+            endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
+        }
+
+        // Get the city for the weather
+        weatherCity = $("#destinationInput").val();
+
+        // Do our API calls in succession, then write the data to the cards
+        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function (flightData) {
+            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function (eventData) {
+                getForecast($("#destinationInput").val(), function (weaData) {
+                    weatherData(weaData);
+                    $(".cardholder-overlay").fadeIn();
+                    $(".cardholder").fadeIn(function () {
+                        writeFlight(flightData);
+                        theEventData(eventData);
+                        $("#clearButton").removeClass("disabled");
+                        $("#saveButton").removeClass("disabled");
+                    });
+
+                });
+            }, endEvent);
+        }, endFlight);
+
+        $("#multipleCities").modal("hide");
+
+        // Hide the carousel buttons
+        $(".carousel-control-prev").fadeOut();
+        $(".carousel-control-next").fadeOut();
+        $(".carousel-caption").fadeOut(function () {
+            $(this).removeClass("d-md-block");
+        });
+        $(".carousel-indicators").fadeOut();
+    }
+
+    // Creates our flight datatable.
+    function createFlightTable(quotes) {
         flightTable = $("#flightTable").DataTable({
             data: quotes,
             paging: false,
@@ -97,33 +235,10 @@ $(() => {
 
             ]
         });
-
     }
-    // Event JS//
-    // Make a function that passes data from the eventData and puts it in this function
-    function theEventData(data) {
-        var eventData = [];
-        for (var i = 0; i < data.events.length; i++) {
-            var emptyObj = {};
-            emptyObj.name = data.events[i].name.text;
-            if (!data.events[i].description.text) {
-                emptyObj.description = "No Description";
-            }
-            else {
-                if (data.events[i].description.text.length > 50)
-                    emptyObj.description = data.events[i].description.text.substr(0, 50) + "...";
-                else
-                    emptyObj.description = data.events[i].description.text;
 
-            }
-            emptyObj.start = data.events[i].start.local;
-            emptyObj.end = data.events[i].end.local;
-            emptyObj.url = data.events[i].url;
-            // Ternary Expression
-            emptyObj.is_free = data.events[i].is_free ? "Yes" : "No";
-            eventData.push(emptyObj);
-        }
-
+    // Creates our event datatable.
+    function createEventTable(eventData) {
         eventTable = $("#eventTable").DataTable({
             data: eventData,
             paging: false,
@@ -174,91 +289,8 @@ $(() => {
             ]
         });
     }
-    // Weather JS //
-    function weatherData(data) {
-        $("#weatherCard").html("<div class='col-lg-1 col-md-2 d-none d-sm-block'></div>");
-        var forecastData = [];
-        for (var i = 0; i < data.length; i++) {
-            var forecasts = {};
-            forecasts.date = moment(data[i].dt_txt);
-            forecasts.icon = data[i].weather[0].icon;
-            forecasts.temp = (data[i].main.temp - 273.15) * 1.80 + 32;
-            forecasts.temp1 = data[i].main.temp - 273.15;
-            forecasts.main = data[i].weather[0].main;
-            forecasts.humidity = (data[i].main.humidity + "%");
-            forecastData.push(forecasts);
-        }
 
-
-        for (var i = 0; i < forecastData.length; i++) {
-            var colDiv = $("<div>");
-            colDiv.addClass("text-center col-lg-2 col-md-4 col-12 mt-lg-0 mt-1 border");
-
-            var dateDiv = $("<div>");
-            dateDiv.text(forecastData[i].date.format("MM/DD/YYYY"));
-            colDiv.append(dateDiv);
-
-            var iconDiv = $("<img>",
-                {
-                    src: "https://openweathermap.org/img/w/" + forecastData[i].icon + ".png",
-                    alt: forecastData.main,
-                });
-
-            colDiv.append(iconDiv);
-
-            mainDiv = $("<div>");
-            mainDiv.text(forecastData[i].main);
-            colDiv.append(mainDiv);
-
-            var farDiv = $("<div>");
-            farDiv.text(forecastData[i].temp.toPrecision(3) + "° F");
-            colDiv.append(farDiv);
-
-            var celDiv = $("<div>");
-            celDiv.text(forecastData[i].temp1.toPrecision(3) + "° C");
-            colDiv.append(celDiv);
-
-            var humDiv = $("<div>");
-            colDiv.append(humDiv);
-
-            $("#weatherCard").append(colDiv);
-
-        }
-    }
-
-    function sendData(org, dest, startMoment, endMoment) {
-        var endFlight, endEvent;
-
-        if (endMoment) {
-            endFlight = endMoment.format("YYYY-MM-DD");
-            endEvent = endMoment.format("YYYY-MM-DDThh:mm:ss");
-        }
-
-        getRoute(org, dest, startMoment.format("YYYY-MM-DD"), function (flightData) {
-            dateEvent($("#destinationInput").val(), startMoment.format("YYYY-MM-DDThh:mm:ss"), function (eventData) {
-                getForecast($("#destinationInput").val(), function (weaData) {
-                    weatherData(weaData);
-                    $(".cardholder-overlay").fadeIn();
-                    $(".cardholder").fadeIn(function () {
-                        writeFlight(flightData);
-                        theEventData(eventData);
-                        $("#clearButton").removeClass("disabled");
-                    });
-
-                });
-            }, endEvent);
-        }, endFlight);
-
-        $("#multipleCities").modal("hide");
-
-        $(".carousel-control-prev").fadeOut();
-        $(".carousel-control-next").fadeOut();
-        $(".carousel-caption").fadeOut(function () {
-            $(this).removeClass("d-md-block");
-        });
-        $(".carousel-indicators").fadeOut();
-    }
-
+    // Validate our search form
     $("#searchForm").validate({
         rules: {
             departure: {
@@ -266,24 +298,26 @@ $(() => {
                 dateFormat: true
             },
             return: {
-                dateFormat: true
+                dateFormat: true,
+                dateAfter: true
             }
         },
-        errorPlacement: function (error, element) {
+        errorPlacement: function (error, element) { // Plaace errors in the proper locations.
             if (element.attr("name") === "origin")
                 error.appendTo($("#errorOrigin"));
             else if (element.attr("name") === "destination")
                 error.appendTo($("#errorDestination"));
             else if (element.attr("name") === "departure")
                 error.appendTo($("#errorDepart"));
-            else if (element.att("name") === "return")
+            else if (element.attr("name") === "return")
                 error.appendTo($("#errorReturn"));
             else
                 error.insertAfter(element);
         }
     });
 
-    $("#submitButton").click((e) => {
+    $("#submitButton").click(function (e) {
+        e.preventDefault();
 
         if ($("#searchForm").valid()) {
             $("#searchStatus").html("<img src='assets/images/ajax-loader.gif' alt='Loading' style='max-height:30px'>");
@@ -300,9 +334,10 @@ $(() => {
                             $("#notFoundContent").text("Your origin was not found.");
                             $("#notFoundModal").modal();
                         }
-                        else if (dataOrigin.Places.length > 1 || dataDestination.Places.length > 1) {
+                        else if (dataOrigin.Places.length > 1 || dataDestination.Places.length > 1) { // More than one location found for either, ask user to specify
                             $("#originSelect").empty();
                             $("#destinationSelect").empty();
+                            // Create options for both Selects
                             for (var i = 0; i < dataOrigin.Places.length; i++) {
                                 var opt = $("<option>");
 
@@ -321,7 +356,7 @@ $(() => {
                             }
                             $("#multipleCities").modal();
                         }
-                        else if (dataOrigin.Places.length === 1 && dataDestination.Places.length === 1) {
+                        else if (dataOrigin.Places.length === 1 && dataDestination.Places.length === 1) { // One found for each, go on ahead
                             var org = dataOrigin.Places[0].PlaceId;
                             var dest = dataDestination.Places[0].PlaceId;
                             var depart = moment($("#departInput").val(), "MM-DD-YYYY");
@@ -338,10 +373,9 @@ $(() => {
                 }
             });
         }
-
-        return false;
     });
 
+    // Select location click event
     $("#selectBtn").click(() => {
         var org = $("#originSelect").val();
         var dest = $("#destinationSelect").val();
@@ -355,20 +389,26 @@ $(() => {
         sendData(org, dest, depart, ret);
     });
 
+    // Clear button click event
     $("#clearButton").click((e) => {
-        if($(e.target).hasClass("disabled"))
+        if ($(e.target).hasClass("disabled")) // Button disable check
             return;
 
+        // Clear the overlays
         $(".cardholder").fadeOut();
-        $(".cardholder-overlay").fadeOut(function(){
+        $(".cardholder-overlay").fadeOut(function () {
             flightTable.destroy();
             eventTable.destroy();
 
-            $("#flightTable").empty();
+            localStorage.clear();
+
+            $("#flightTable").empty(); // Table objects are destroyed but leave the data in the tables, clear them
             $("#eventTable").empty();
 
-            $("#clearButton").addClass("disabled");
+            $("#clearButton").addClass("disabled"); // disable our buttons
+            $("#saveButton").addClass("disabled");
 
+            // Put the carousel buttons back
             $(".carousel-control-prev").fadeIn();
             $(".carousel-control-next").fadeIn();
             $(".carousel-caption").fadeIn(function () {
@@ -378,5 +418,72 @@ $(() => {
         });
     });
 
+    // Save button click event
+    $("#saveButton").click((e) => {
+        if ($(e.target).hasClass("disabled"))
+            return;
+
+        localStorage.clear();
+
+        // Save everything to localStorage
+        var flights = flightTable.data().toArray();
+        var events = eventTable.data().toArray();
+        var selectedFlight = flightTable.rows({ selected: true }).data().toArray(); // get things selected in the datatables
+        var selectedEvents = eventTable.rows({ selected: true }).data().toArray();
+
+        localStorage.setItem("weatherCity", weatherCity);
+        localStorage.setItem("flights", JSON.stringify(flights));
+        localStorage.setItem("events", JSON.stringify(events));
+        if (selectedFlight.length > 0)
+            localStorage.setItem("selectedFlight", JSON.stringify(selectedFlight[0]));
+        if (selectedEvents.length > 0)
+            localStorage.setItem("selectedEvents", JSON.stringify(selectedEvents));
+
+    });
+
+    var savedFlightData = JSON.parse(localStorage.getItem("flights"));
+    var savedEventData = JSON.parse(localStorage.getItem("events"));
+    weatherCity = localStorage.getItem("weatherCity");
+
+    // localStorage data check, load if found
+    if (Array.isArray(savedEventData) && Array.isArray(savedFlightData) && weatherCity) {
+        getForecast(weatherCity, function (weaData) {
+            weatherData(weaData);
+
+            $(".carousel-control-prev").fadeOut();
+            $(".carousel-control-next").fadeOut();
+            $(".carousel-caption").fadeOut(function () {
+                $(this).removeClass("d-md-block");
+            });
+            $(".carousel-indicators").fadeOut();
+
+            $(".cardholder-overlay").fadeIn();
+            $(".cardholder").fadeIn(function () {
+                createFlightTable(savedFlightData);
+                createEventTable(savedEventData);
+                $("#clearButton").removeClass("disabled");
+                $("#saveButton").removeClass("disabled");
+
+                // Select saved selected rows if found.
+                if (localStorage.hasOwnProperty("selectedFlight")) {
+                    var selFlight = JSON.parse(localStorage.getItem("selectedFlight"));
+                    flightTable.row(function (idx, data, node) {
+                        return data.id === selFlight.id;
+                    }).select();
+                }
+                if (localStorage.hasOwnProperty("selectedEvents")) {
+                    var selectedEvents = JSON.parse(localStorage.getItem("selectedEvents"));
+
+                    eventTable.rows(function (idx, data, node) {
+                        var found = selectedEvents.find(ev => ev.id === data.id);
+
+                        return found ? true : false;
+                    }).select();
+
+                }
+
+            });
+        });
+    }
 
 });
