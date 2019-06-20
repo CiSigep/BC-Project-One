@@ -263,7 +263,7 @@ $(() => {
                     data: "start",
                     render: function (data) {
                         var start = moment(data);
-                        return start.format("MMMM Do YYYY, h:mm:ss a");
+                        return start.format("MM/DD/YYYY, h:mm:ss a");
                     },
                     responsivePriority: 3
                 },
@@ -272,7 +272,7 @@ $(() => {
                     data: "end",
                     render: function (data) {
                         var end = moment(data);
-                        return end.format("MMMM Do YYYY, h:mm:ss a");
+                        return end.format("MM/DD/YYYY, h:mm:ss a");
                     },
                     responsivePriority: 4
                 },
