@@ -112,11 +112,11 @@ $(() => {
             colDiv.append(mainDiv);
 
             var farDiv = $("<div>");
-            farDiv.text(forecastData[i].temp.toPrecision(3) + "° F");
+            farDiv.text(forecastData[i].temp.toFixed(1) + "° F");
             colDiv.append(farDiv);
 
             var celDiv = $("<div>");
-            celDiv.text(forecastData[i].temp1.toPrecision(3) + "° C");
+            celDiv.text(forecastData[i].temp1.toFixed(1) + "° C");
             colDiv.append(celDiv);
 
             var humDiv = $("<div>");
